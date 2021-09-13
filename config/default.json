@@ -28,5 +28,6 @@
       "passwordField": "password"
     }
   },
-  "mongodb": "mongodb+srv://jupionv2:Admin@1234@jupion-api.hgmzf.mongodb.net/demo"
+  "mongodb": "mongodb+srv://jupionv2:Admin@1234@jupion-api.hgmzf.mongodb.net/demo",
+  "mongodb1": "mongodb+srv://library:Library123@library-management.pl78d.mongodb.net/library"
 }

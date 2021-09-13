@@ -1,6 +1,7 @@
 import CheckIfAdmin from '../../hooks/CheckIfAdmin';
 import {BadRequest} from '@feathersjs/errors';
 import * as feathersAuthentication from '@feathersjs/authentication';
+import SetBookQuery from './SetBookQuery';
 const { authenticate } = feathersAuthentication.hooks;
 
 
@@ -10,7 +11,7 @@ export default {
       authenticate('jwt')
     ],
     find: [
-
+      //SetBookQuery()
     ],
     get: [
       ctx => {

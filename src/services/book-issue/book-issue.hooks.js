@@ -4,6 +4,7 @@ import {disallow, keep} from 'feathers-hooks-common';
 import CheckIfUser from '../../hooks/CheckIfUser';
 import {CheckIfBookAvailable} from './hooks/CheckIfBookAvailable';
 import CheckIfAdmin from '../../hooks/CheckIfAdmin';
+import {BadRequest} from '@feathersjs/errors';
 
 export default {
   before: {
@@ -16,6 +17,8 @@ export default {
         if (user.role === 1) {
           query.issuedBy = user._id;
         }
+
+        console.log(ctx.params.query.$populate);
       }
     ],
     get: [],
@@ -35,12 +38,50 @@ export default {
     update: [disallow()],
     patch: [
       keep('status', 'cancellationReason'), //
-      CheckIfAdmin()
+      CheckIfAdmin(),
       // Get issue details from id(context.id).
       // status 0 - check previous status 1 or 2, cancelledOn = new Date(), if admin give cancellationReason
       // status 2 - check admin or not, check previous status 1 or not, acceptedOn = new Date(),
       // status 3 - check admin or not, check previous status 2 or not, issuedOn = new Date(),
       // status 4 - check admin or not, check previous status 3 or not, returnedOn = new Date()
+      async ctx => {
+        const {data, id, app} = ctx;
+        const { status } = data;
+
+        let previousStatus;
+
+        switch (status) {
+        case 0:
+          previousStatus = {
+            $in: [1, 2],
+          };
+          data.cancelledOn = new Date();
+          break;
+        case 2:
+          previousStatus = 1;
+          data.acceptedOn = new Date();
+          break;
+        case 3:
+          previousStatus = 2;
+          data.issuedOn = new Date();
+          break;
+        case 4:
+          previousStatus = 3;
+          data.returnedOn = new Date();
+          break;
+        default:
+          throw new BadRequest('Please give a valid status.');
+        }
+
+        await app.service('book-issue')._get(id, {
+          query: {
+            status: previousStatus,
+          }
+        }).catch(() => {
+          throw new BadRequest('Issue record not found.');
+        });
+
+      }
     ],
     remove: []
   },
@@ -65,7 +106,7 @@ export default {
         }
         await app.service('book')._patch(bookId, {
           $inc: {
-            availableUnits: status === 3 ? -1 : 1
+            availableUnits: status === 3 ? -1 : status === 4 ? 1 : 0
           }
         });
       }
