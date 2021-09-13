@@ -13,7 +13,6 @@ export default function (app) {
     },
     genres: {
       type : [String],
-      default: [],
     },
     status: {
       type: Number,
